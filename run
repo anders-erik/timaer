@@ -1,0 +1,10 @@
+#!/bin/bash
+
+
+function prod() {
+    cd back
+    npm run prod
+}
+
+
+$1

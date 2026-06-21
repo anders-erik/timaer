@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "name": "timaer-back",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "build": "echo 'Build complete'",
+    "prod": "npm install --omit=dev && node --env-file=../.env index.js",
+    "up": "node index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
