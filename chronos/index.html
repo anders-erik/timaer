@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos - Time Formats</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        .time-format {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .value {
+            font-size: 18px;
+            color: #222;
+            word-break: break-all;
+        }
+        .update-time {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱ Chronos</h1>
+        
+        <div class="time-format">
+            <div class="label">ISO 8601</div>
+            <div class="value" id="iso">-</div>
+        </div>
+
+        <div class="time-format">
+            <div class="label">Unix Time (seconds)</div>
+            <div class="value" id="unix">-</div>
+        </div>
+
+        <div class="time-format">
+            <div class="label">Unix Time (milliseconds)</div>
+            <div class="value" id="unixMs">-</div>
+        </div>
+
+        <div class="time-format">
+            <div class="label">Julian Day Number</div>
+            <div class="value" id="jd">-</div>
+        </div>
+
+        <div class="time-format">
+            <div class="label">Julian Date</div>
+            <div class="value" id="jdate">-</div>
+        </div>
+
+        <div class="time-format">
+            <div class="label">Julian Second (today)</div>
+            <div class="value" id="jsec">-</div>
+        </div>
+
+        <div class="time-format">
+            <div class="label">Modified Julian Day</div>
+            <div class="value" id="mjd">-</div>
+        </div>
+
+        <div class="update-time">Updates every second</div>
+    </div>
+
+    <script>
+        function updateTimes() {
+            const now = new Date();
+            const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+
+            // ISO 8601
+            document.getElementById('iso').textContent = now.toISOString();
+
+            // Unix Time (seconds)
+            const unixSec = Math.floor(now.getTime() / 1000);
+            document.getElementById('unix').textContent = unixSec;
+
+            // Unix Time (milliseconds)
+            document.getElementById('unixMs').textContent = now.getTime();
+
+            // Julian Day Number
+            const jd = calculateJulianDay(utcDate);
+            document.getElementById('jd').textContent = jd.toFixed(5);
+
+            // Julian Date (full)
+            document.getElementById('jdate').textContent = jd.toFixed(8);
+
+            // Julian Second (seconds since midnight)
+            const jSec = (utcDate.getHours() * 3600) + (utcDate.getMinutes() * 60) + utcDate.getSeconds();
+            document.getElementById('jsec').textContent = jSec + (utcDate.getMilliseconds() / 1000).toFixed(3).substring(1);
+
+            // Modified Julian Day (JD - 2400000.5)
+            const mjd = jd - 2400000.5;
+            document.getElementById('mjd').textContent = mjd.toFixed(5);
+        }
+
+        function calculateJulianDay(date) {
+            const year = date.getUTCFullYear();
+            const month = date.getUTCMonth() + 1;
+            const day = date.getUTCDate();
+            const hour = date.getUTCHours();
+            const minute = date.getUTCMinutes();
+            const second = date.getUTCSeconds();
+            const ms = date.getUTCMilliseconds();
+
+            const a = Math.floor((14 - month) / 12);
+            const y = year + 4800 - a;
+            const m = month + 12 * a - 3;
+
+            const jdn = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+            const jd = jdn + (hour - 12) / 24 + minute / 1440 + (second + ms / 1000) / 86400;
+
+            return jd;
+        }
+
+        // Update immediately and then every second
+        updateTimes();
+        setInterval(updateTimes, 1000);
+    </script>
+</body>
+</html>
