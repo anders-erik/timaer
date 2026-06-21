@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timaer</title>
+  <style>
+    :root {
+      --bg: #0e0e0e;
+      --card: #171717;
+      --border: #282828;
+      --border-hover: #3a3a3a;
+      --text: #e8e8e8;
+      --dim: #777;
+      --green: #4ade80;
+      --orange: #fb923c;
+      --red: #f87171;
+      --btn: #222;
+      --btn-hover: #2e2e2e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      font-size: 15px;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    header h1 {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      background: var(--btn);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.375rem 0.875rem;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      line-height: 1.4;
+      transition: background 0.12s, border-color 0.12s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--btn-hover); border-color: var(--border-hover); }
+    .btn:disabled { opacity: 0.35; cursor: default; }
+
+    .btn-primary {
+      background: var(--green);
+      color: #000;
+      border-color: var(--green);
+      font-weight: 600;
+    }
+    .btn-primary:hover { opacity: 0.88; background: var(--green); }
+
+    .btn-icon {
+      padding: 0.375rem 0.55rem;
+      font-size: 0.9375rem;
+      line-height: 1;
+    }
+
+    /* ── Presets bar ─────────────────────────────────────── */
+    #presets-bar {
+      padding: 0.625rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #presets-bar.hidden { display: none; }
+
+    .presets-label {
+      font-size: 0.6875rem;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-right: 0.25rem;
+    }
+
+    .preset-chip {
+      display: inline-flex;
+      align-items: center;
+      background: #1c1c1c;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .preset-chip-btn {
+      background: none;
+      border: none;
+      color: #b0b0b0;
+      font-size: 0.8125rem;
+      padding: 0.275rem 0.75rem;
+      cursor: pointer;
+      transition: color 0.12s, background 0.12s;
+    }
+    .preset-chip-btn:hover { color: var(--text); background: #222; }
+
+    .preset-chip-del {
+      background: none;
+      border: none;
+      border-left: 1px solid var(--border);
+      color: var(--dim);
+      font-size: 0.75rem;
+      padding: 0.275rem 0.5rem;
+      cursor: pointer;
+      transition: color 0.12s, background 0.12s;
+      line-height: 1;
+    }
+    .preset-chip-del:hover { color: var(--red); background: #1f1414; }
+
+    /* ── Main grid ───────────────────────────────────────── */
+    main { padding: 1.25rem; }
+
+    #timers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0.875rem;
+    }
+
+    /* ── Timer card ──────────────────────────────────────── */
+    .timer-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.125rem 1.125rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+      transition: border-color 0.25s;
+    }
+    .timer-card.state-running  { border-color: #253325; }
+    .timer-card.state-finished {
+      border-color: var(--red);
+      animation: border-pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes border-pulse {
+      0%, 100% { border-color: var(--red); }
+      50%       { border-color: #5a1f1f; }
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .timer-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .type-badge {
+      flex-shrink: 0;
+      font-size: 0.625rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--dim);
+      background: #1f1f1f;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.15rem 0.4rem;
+    }
+
+    .timer-display {
+      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+      font-size: 2.625rem;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+      text-align: center;
+      padding: 0.375rem 0;
+      color: #555;
+      transition: color 0.25s;
+    }
+    .timer-display.clr-idle { color: #555; }
+    .timer-display.clr-run  { color: var(--green); }
+    .timer-display.clr-warn { color: var(--orange); }
+    .timer-display.clr-done { color: var(--red); }
+
+    .timer-sub {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--dim);
+      min-height: 1.05rem;
+    }
+
+    .card-controls {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      padding-top: 0.25rem;
+    }
+
+    /* ── Empty state ─────────────────────────────────────── */
+    #empty-state {
+      text-align: center;
+      padding: 5rem 1rem;
+      color: var(--dim);
+      font-size: 0.875rem;
+    }
+    #empty-state .big { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.4; }
+
+    /* ── Modal ───────────────────────────────────────────── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 1rem;
+    }
+    .overlay.hidden { display: none; }
+
+    .modal {
+      background: #191919;
+      border: 1px solid #2f2f2f;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.125rem;
+    }
+
+    .modal h2 { font-size: 1rem; font-weight: 600; }
+
+    .field { display: flex; flex-direction: column; gap: 0.35rem; }
+
+    .field label { font-size: 0.75rem; color: var(--dim); }
+
+    .field input,
+    .field select {
+      background: #111;
+      border: 1px solid #2f2f2f;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.9375rem;
+      padding: 0.5rem 0.75rem;
+      width: 100%;
+      transition: border-color 0.12s;
+    }
+    .field input:focus,
+    .field select:focus { outline: none; border-color: var(--green); }
+
+    .fields-row { display: flex; gap: 0.625rem; }
+    .fields-row .field { flex: 1; }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: #aaa;
+      cursor: pointer;
+      user-select: none;
+    }
+    .check-label input[type=checkbox] {
+      width: 1rem;
+      height: 1rem;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 0.625rem;
+      justify-content: flex-end;
+      padding-top: 0.125rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Timaer</h1>
+  <button class="btn btn-primary" id="btn-new">+ New Timer</button>
+</header>
+
+<div id="presets-bar" class="hidden">
+  <span class="presets-label">Presets</span>
+</div>
+
+<main>
+  <div id="timers-grid"></div>
+  <div id="empty-state">
+    <div class="big">← &#9201;</div>
+    No active timers &mdash; click <strong>+ New Timer</strong> to start one.
+  </div>
+</main>
+
+<!-- Add timer modal -->
+<div class="overlay hidden" id="modal-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h2 id="modal-title">New Timer</h2>
+
+    <div class="field">
+      <label for="f-name">Name</label>
+      <input id="f-name" type="text" placeholder="e.g. Pomodoro" maxlength="60" />
+    </div>
+
+    <div class="field">
+      <label for="f-type">Type</label>
+      <select id="f-type">
+        <option value="countdown">Countdown — counts down, beeps at zero</option>
+        <option value="recurring">Recurring — auto-restarts after each cycle</option>
+        <option value="alarm">Alarm — fires at a specific time of day</option>
+      </select>
+    </div>
+
+    <!-- Countdown / Recurring fields -->
+    <div id="sect-duration">
+      <div class="fields-row">
+        <div class="field">
+          <label for="f-h">Hours</label>
+          <input id="f-h" type="number" min="0" max="23" value="0" />
+        </div>
+        <div class="field">
+          <label for="f-m">Min</label>
+          <input id="f-m" type="number" min="0" max="59" value="5" />
+        </div>
+        <div class="field">
+          <label for="f-s">Sec</label>
+          <input id="f-s" type="number" min="0" max="59" value="0" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Alarm fields -->
+    <div id="sect-alarm" style="display:none" class="field">
+      <label for="f-time">Alarm time</label>
+      <input id="f-time" type="time" />
+      <label class="check-label" style="margin-top:0.5rem">
+        <input type="checkbox" id="f-daily" checked />
+        Repeat daily
+      </label>
+    </div>
+
+    <label class="check-label">
+      <input type="checkbox" id="f-preset" />
+      Save as preset
+    </label>
+
+    <div class="modal-footer">
+      <button class="btn" id="btn-cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-start">Start</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Persistence ────────────────────────────────────────────────────────────
+
+let presets = JSON.parse(localStorage.getItem('timaer_presets') || '[]');
+
+function savePresets() {
+  localStorage.setItem('timaer_presets', JSON.stringify(presets));
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────────
+
+let audioCtx = null;
+
+function unlockAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function beep(pattern) {
+  if (!audioCtx) return;
+  const ctx = audioCtx;
+  pattern.forEach(([freq, delay, dur]) => {
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const t = ctx.currentTime + delay;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.45, t + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.start(t);
+    osc.stop(t + dur + 0.01);
+  });
+}
+
+// freq, start-offset-s, duration-s
+const BEEP_DONE  = [[880,0,0.25],[880,0.35,0.25],[1100,0.7,0.4]];
+const BEEP_ALARM = [[660,0,0.3],[660,0.4,0.3],[880,0.8,0.5],[880,1.4,0.5],[1100,2.0,0.6]];
+
+// ── Timer state ────────────────────────────────────────────────────────────
+
+let timers = [];
+let _nextId = 1;
+
+function mkTimer(cfg) {
+  return {
+    id:         _nextId++,
+    name:       cfg.name || 'Timer',
+    type:       cfg.type,           // 'countdown' | 'recurring' | 'alarm'
+    totalMs:    cfg.totalMs ?? 0,
+    alarmHour:  cfg.alarmHour  ?? null,
+    alarmMinute:cfg.alarmMinute ?? null,
+    alarmDaily: cfg.alarmDaily  ?? true,
+    state:      'running',          // 'running' | 'paused' | 'finished'
+    startedAt:  Date.now(),
+    pausedMs:   0,
+    fireCount:  0,
+    _alarmFiredMinute: null,
+  };
+}
+
+function elapsedMs(t) {
+  if (t.state === 'running') return t.pausedMs + (Date.now() - t.startedAt);
+  return t.pausedMs;
+}
+
+function remainingMs(t) {
+  return Math.max(0, t.totalMs - elapsedMs(t));
+}
+
+function fmtMs(ms) {
+  if (ms <= 0) return '00:00';
+  const totalSec = Math.ceil(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function alarmCountdown(h, m) {
+  const now    = new Date();
+  const target = new Date();
+  target.setHours(h, m, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  return 'in ' + fmtMs(target - now);
+}
+
+// ── Tick ───────────────────────────────────────────────────────────────────
+
+function tick() {
+  const now = Date.now();
+
+  timers.forEach(t => {
+    if (t.state !== 'running') return;
+
+    if (t.type === 'alarm') {
+      const d      = new Date();
+      const curMin = d.getHours() * 60 + d.getMinutes();
+      const tMin   = t.alarmHour * 60 + t.alarmMinute;
+      if (curMin === tMin && t._alarmFiredMinute !== curMin) {
+        t._alarmFiredMinute = curMin;
+        t.fireCount++;
+        beep(BEEP_ALARM);
+        if (!t.alarmDaily) t.state = 'finished';
+      }
+      return;
+    }
+
+    if (remainingMs(t) <= 0) {
+      t.fireCount++;
+      beep(BEEP_DONE);
+      if (t.type === 'recurring') {
+        t.startedAt = now;
+        t.pausedMs  = 0;
+      } else {
+        t.state = 'finished';
+      }
+    }
+  });
+
+  renderCards();
+}
+
+// ── Actions ────────────────────────────────────────────────────────────────
+
+function toggleTimer(id) {
+  const t = timers.find(x => x.id === id);
+  if (!t) return;
+  if (t.state === 'running') {
+    t.pausedMs = elapsedMs(t);
+    t.state    = 'paused';
+  } else if (t.state === 'paused') {
+    t.startedAt = Date.now();
+    t.state     = 'running';
+  }
+  renderCards();
+}
+
+function resetTimer(id) {
+  const t = timers.find(x => x.id === id);
+  if (!t) return;
+  t.pausedMs  = 0;
+  t.startedAt = Date.now();
+  t.state     = 'running';
+  t.fireCount = 0;
+  t._alarmFiredMinute = null;
+  renderCards();
+}
+
+function removeTimer(id) {
+  timers = timers.filter(t => t.id !== id);
+  renderCards();
+}
+
+function launchPreset(p) {
+  unlockAudio();
+  timers.push(mkTimer(p));
+  renderCards();
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+
+function renderAll() {
+  renderPresets();
+  renderCards();
+}
+
+function renderPresets() {
+  const bar = document.getElementById('presets-bar');
+  bar.querySelectorAll('.preset-chip').forEach(el => el.remove());
+
+  if (presets.length === 0) { bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+
+  presets.forEach((p, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'preset-chip';
+
+    const launch = document.createElement('button');
+    launch.className = 'preset-chip-btn';
+    launch.textContent = p.name;
+    launch.title = p.type === 'alarm'
+      ? `Alarm at ${pad(p.alarmHour)}:${pad(p.alarmMinute)}`
+      : fmtMs(p.totalMs);
+    launch.addEventListener('click', () => launchPreset(p));
+
+    const del = document.createElement('button');
+    del.className = 'preset-chip-del';
+    del.textContent = '×';
+    del.title = 'Remove preset';
+    del.addEventListener('click', () => {
+      presets.splice(i, 1);
+      savePresets();
+      renderPresets();
+    });
+
+    chip.appendChild(launch);
+    chip.appendChild(del);
+    bar.appendChild(chip);
+  });
+}
+
+function renderCards() {
+  const grid  = document.getElementById('timers-grid');
+  const empty = document.getElementById('empty-state');
+
+  empty.style.display = timers.length === 0 ? '' : 'none';
+
+  const currentIds = new Set(timers.map(t => t.id));
+  grid.querySelectorAll('.timer-card[data-id]').forEach(el => {
+    if (!currentIds.has(+el.dataset.id)) el.remove();
+  });
+
+  timers.forEach((t, i) => {
+    let card = grid.querySelector(`.timer-card[data-id="${t.id}"]`);
+    if (!card) {
+      card = buildCard(t);
+      grid.appendChild(card);
+    }
+    patchCard(card, t);
+    if (grid.children[i] !== card) grid.insertBefore(card, grid.children[i] || null);
+  });
+}
+
+function buildCard(t) {
+  const card = document.createElement('div');
+  card.className = 'timer-card';
+  card.dataset.id = t.id;
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="timer-name">${esc(t.name)}</span>
+      <span class="type-badge">${typeBadge(t.type)}</span>
+    </div>
+    <div class="timer-display"></div>
+    <div class="timer-sub"></div>
+    <div class="card-controls">
+      <button class="btn btn-icon js-pp" title="Play / Pause"></button>
+      <button class="btn btn-icon js-reset" title="Restart">&#8635;</button>
+      <button class="btn btn-icon js-del" title="Remove">&#10005;</button>
+    </div>
+  `;
+  card.querySelector('.js-pp').addEventListener('click',    () => { unlockAudio(); toggleTimer(t.id); });
+  card.querySelector('.js-reset').addEventListener('click', () => { unlockAudio(); resetTimer(t.id); });
+  card.querySelector('.js-del').addEventListener('click',   () => removeTimer(t.id));
+  return card;
+}
+
+function patchCard(card, t) {
+  card.className = `timer-card state-${t.state}`;
+
+  const display = card.querySelector('.timer-display');
+  const sub     = card.querySelector('.timer-sub');
+  const ppBtn   = card.querySelector('.js-pp');
+
+  let displayText, colorClass, subText = '';
+
+  if (t.type === 'alarm') {
+    displayText = `${pad(t.alarmHour)}:${pad(t.alarmMinute)}`;
+    subText = t.state === 'finished'
+      ? (t.alarmDaily ? 'fires again tomorrow' : 'done')
+      : alarmCountdown(t.alarmHour, t.alarmMinute);
+    colorClass = t.state === 'finished' ? 'clr-done'
+               : t.state === 'running'  ? 'clr-run'
+               : 'clr-idle';
+  } else {
+    const rem = remainingMs(t);
+    displayText = fmtMs(rem);
+    const pct  = t.totalMs > 0 ? rem / t.totalMs : 1;
+    colorClass  = t.state === 'finished'                     ? 'clr-done'
+                : t.state === 'paused'                       ? 'clr-idle'
+                : (pct < 0.1 || rem < 10_000)                ? 'clr-warn'
+                : 'clr-run';
+    if (t.type === 'recurring' && t.fireCount > 0) subText = `fired ${t.fireCount}×`;
+  }
+
+  display.textContent = displayText;
+  display.className   = `timer-display ${colorClass}`;
+  sub.textContent     = subText;
+
+  const canPP = t.type !== 'alarm' && t.state !== 'finished';
+  ppBtn.disabled   = !canPP;
+  ppBtn.textContent = t.state === 'running' ? '⏸' : '▶';
+}
+
+function typeBadge(type) {
+  return type === 'recurring' ? '&#8635; recurring'
+       : type === 'alarm'     ? '&#9200; alarm'
+       : '&#9201; countdown';
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+
+const overlay   = document.getElementById('modal-overlay');
+const fType     = document.getElementById('f-type');
+const sectDur   = document.getElementById('sect-duration');
+const sectAlarm = document.getElementById('sect-alarm');
+
+document.getElementById('btn-new').addEventListener('click', openModal);
+document.getElementById('btn-cancel').addEventListener('click', closeModal);
+document.getElementById('btn-start').addEventListener('click', submitModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+fType.addEventListener('change', () => {
+  const isAlarm = fType.value === 'alarm';
+  sectDur.style.display   = isAlarm ? 'none' : '';
+  sectAlarm.style.display = isAlarm ? ''     : 'none';
+});
+
+document.addEventListener('keydown', e => {
+  if (overlay.classList.contains('hidden')) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') submitModal();
+});
+
+function openModal() {
+  document.getElementById('f-name').value    = '';
+  document.getElementById('f-h').value       = '0';
+  document.getElementById('f-m').value       = '5';
+  document.getElementById('f-s').value       = '0';
+  document.getElementById('f-time').value    = '';
+  document.getElementById('f-daily').checked  = true;
+  document.getElementById('f-preset').checked = false;
+  fType.value = 'countdown';
+  sectDur.style.display   = '';
+  sectAlarm.style.display = 'none';
+  overlay.classList.remove('hidden');
+  document.getElementById('f-name').focus();
+}
+
+function closeModal() {
+  overlay.classList.add('hidden');
+}
+
+function submitModal() {
+  unlockAudio();
+
+  const name = document.getElementById('f-name').value.trim() || 'Timer';
+  const type = fType.value;
+  const cfg  = { name, type };
+
+  if (type === 'alarm') {
+    const tv = document.getElementById('f-time').value;
+    if (!tv) { document.getElementById('f-time').focus(); return; }
+    const [h, m] = tv.split(':').map(Number);
+    cfg.alarmHour    = h;
+    cfg.alarmMinute  = m;
+    cfg.alarmDaily   = document.getElementById('f-daily').checked;
+  } else {
+    const h     = Math.max(0, parseInt(document.getElementById('f-h').value) || 0);
+    const m     = Math.max(0, parseInt(document.getElementById('f-m').value) || 0);
+    const s     = Math.max(0, parseInt(document.getElementById('f-s').value) || 0);
+    cfg.totalMs = (h * 3600 + m * 60 + s) * 1000;
+    if (cfg.totalMs <= 0) { document.getElementById('f-m').focus(); return; }
+  }
+
+  if (document.getElementById('f-preset').checked) {
+    presets.push({ ...cfg });
+    savePresets();
+    renderPresets();
+  }
+
+  timers.push(mkTimer(cfg));
+  renderCards();
+  closeModal();
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+
+renderAll();
+setInterval(tick, 500);
+</script>
+</body>
+</html>
